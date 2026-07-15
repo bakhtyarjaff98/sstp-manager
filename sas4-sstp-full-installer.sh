@@ -247,7 +247,7 @@ printf '%s\n' \
     'After=network.target' \
     '' \
     '[Service]' \
-    'ExecStart=/opt/sstpd-venv/bin/sstpd -l 0.0.0.0 -p 4433 -c /root/cert.pem -k /root/key.pem --local 10.200.10.1 --remote 10.200.0.0/16 --pppd-options /etc/ppp/options.sstpd -v 5 --ciphers DEFAULT:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:@SECLEVEL=1' \
+    'ExecStart=/opt/sstpd-venv/bin/sstpd -l 0.0.0.0 -p 4433 -c /root/cert.pem -k /root/key.pem --local 10.200.10.1 --remote 10.200.0.0/16 --pppd-config /etc/ppp/options.sstpd -v 5 --ciphers DEFAULT:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:@SECLEVEL=1' \
     'Restart=always' \
     'RestartSec=3' \
     'User=root' \
