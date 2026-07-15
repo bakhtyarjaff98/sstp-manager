@@ -55,6 +55,15 @@ a2enmod ssl
 echo -e "${GREEN}✅ Required packages installed${NC}"
 echo ""
 
+# Remove old L2TP vhosts if present (prevents them shadowing the SSTP vhost on
+# servers that previously ran l2tp-manager).
+for old_conf in l2tp-manager-http l2tp-manager-ssl; do
+    if [ -f "/etc/apache2/sites-enabled/${old_conf}.conf" ]; then
+        a2dissite "${old_conf}.conf" >/dev/null 2>&1 || true
+        echo -e "${YELLOW}Disabled old ${old_conf} vhost${NC}"
+    fi
+done
+
 # Clone the project
 echo -e "${CYAN}📥 Cloning SSTP Manager repository...${NC}"
 if [ -d "$TARGET_DIR" ]; then
