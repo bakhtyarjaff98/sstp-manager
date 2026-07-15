@@ -50,7 +50,7 @@ function readUsers($file) {
     $users = [];
     $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
-        if (strpos($line, '#') === 0 || strpos($line, 'tunnel') === 0) continue; // Skip comments and tunnel line
+        if (strpos($line, '#') === 0) continue; // Skip comments
         $parts = preg_split('/\s+/', $line);
         if (count($parts) == 4) {
             $users[] = [
@@ -73,9 +73,8 @@ function writeUsers($file, $users) {
         throw new Exception('Invalid file path');
     }
     
-    $content = "# Secrets for authentication using CHAP\n";
+    $content = "# SSTP tunnel users\n";
     $content .= "# client server secret IP addresses\n";
-    $content .= "tunnel tunnel tunnel *\n";
     foreach ($users as $user) {
         // Sanitize user data before writing
         // Allow special chars like @ and . in usernames; quote if needed
@@ -97,9 +96,9 @@ function writeUsers($file, $users) {
     file_put_contents($validatedPath, $content);
 }
 
-// Get L2TP service status
+// Get SSTP service status
 function getServiceStatus() {
-    $output = shell_exec('systemctl is-active xl2tpd 2>&1');
+    $output = shell_exec('systemctl is-active sstpd 2>&1');
     $status = trim($output);
     
     // Get connected tunnels count
@@ -113,15 +112,15 @@ function getServiceStatus() {
     ];
 }
 
-// Control L2TP service (requires sudo permissions for www-data)
+// Control SSTP service (requires sudo permissions for www-data)
 function controlService($action) {
     $allowed = ['start', 'stop', 'restart'];
     if (!in_array($action, $allowed)) {
         return ['success' => false, 'message' => 'Invalid action'];
     }
-    
-    $output = shell_exec("sudo systemctl $action xl2tpd 2>&1");
-    $status = shell_exec('systemctl is-active xl2tpd 2>&1');
+
+    $output = shell_exec("sudo systemctl $action sstpd 2>&1");
+    $status = shell_exec('systemctl is-active sstpd 2>&1');
     
     return [
         'success' => (trim($status) === 'active' || $action === 'stop'),
@@ -153,7 +152,7 @@ function generateUniqueUsername($users) {
 // Get the next available IP address
 function getNextIp($users) {
     if (empty($users)) {
-        return '10.255.10.11';
+        return '10.200.10.11';
     }
 
     // Find the MAXIMUM IP in use, not just the last entry in array
@@ -165,26 +164,26 @@ function getNextIp($users) {
             $maxIpLong = $ipLong;
         }
     }
-    
+
     // Fallback if no valid IPs found
     if ($maxIpLong === 0) {
-        return '10.255.10.11';
+        return '10.200.10.11';
     }
 
     $lastIp = long2ip($maxIpLong);
     $nextIpLong = $maxIpLong + 1;
 
     // Define the current and next range boundaries
-    $currentRangeStart = ip2long('10.255.' . explode('.', $lastIp)[2] . '.2');
-    $currentRangeEnd = ip2long('10.255.' . explode('.', $lastIp)[2] . '.254');
+    $currentRangeStart = ip2long('10.200.' . explode('.', $lastIp)[2] . '.2');
+    $currentRangeEnd = ip2long('10.200.' . explode('.', $lastIp)[2] . '.254');
 
     // Check if the next IP exceeds the current range, move to the next range if necessary
     if ($nextIpLong > $currentRangeEnd) {
-        $nextRangeStart = ip2long('10.255.' . (explode('.', $lastIp)[2] + 1) . '.2');
-        $nextRangeEnd = ip2long('10.255.' . (explode('.', $lastIp)[2] + 1) . '.254');
+        $nextRangeStart = ip2long('10.200.' . (explode('.', $lastIp)[2] + 1) . '.2');
+        $nextRangeEnd = ip2long('10.200.' . (explode('.', $lastIp)[2] + 1) . '.254');
 
         // Ensure the next range does not exceed the defined ranges
-        if ($nextRangeStart <= ip2long('10.255.255.254')) {
+        if ($nextRangeStart <= ip2long('10.200.255.254')) {
             $nextIpLong = $nextRangeStart;
         } else {
             // Handle the case when all ranges are exhausted (optional)
@@ -196,7 +195,7 @@ function getNextIp($users) {
     return long2ip($nextIpLong);
 }
 
-// Function to execute l2tp-routectl command
+// Function to execute sstp-routectl command
 function executeRouteCommand($command) {
     // Validate command structure - only allow specific commands
     $allowedCommands = ['list', 'add', 'del', 'apply'];
@@ -218,7 +217,7 @@ function executeRouteCommand($command) {
         ];
     }
     
-    $fullCommand = "sudo /usr/local/sbin/l2tp-routectl " . escapeshellcmd($command) . " 2>&1";
+    $fullCommand = "sudo /usr/local/sbin/sstp-routectl " . escapeshellcmd($command) . " 2>&1";
     exec($fullCommand, $output, $returnCode);
     return [
         'output' => implode("\n", $output),
@@ -256,7 +255,7 @@ function getPeerRoutesArray($peerIp) {
                 continue;
             }
             // Add valid route lines (lines containing network routes)
-            // A route line typically looks like: "192.168.1.0/24 via 10.255.10.11"
+            // A route line typically looks like: "192.168.1.0/24 via 10.200.10.11"
             if (preg_match('/^\d+\.\d+\.\d+\.\d+\/\d+/', trim($line))) {
                 $routes[] = trim($line);
             }
@@ -267,7 +266,7 @@ function getPeerRoutesArray($peerIp) {
 
 // Function to extract destination from a route string
 function getRouteDestination($route) {
-    // A route string looks like: "192.168.1.0/24 via 10.255.10.11"
+    // A route string looks like: "192.168.1.0/24 via 10.200.10.11"
     // We want to extract just the destination part: "192.168.1.0/24"
     $parts = explode(' ', $route);
     return $parts[0];
@@ -631,7 +630,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Ensure the IP range does not exceed the defined ranges
-            if ($ipRangeFrom + $i > ip2long('10.255.255.254')) {
+            if ($ipRangeFrom + $i > ip2long('10.200.255.254')) {
                 echo json_encode(['error' => safeErrorMessage('IP range exhausted. Please start a new range.')]);
                 exit();
             }
@@ -836,7 +835,7 @@ $allRoutes = getPeerRoutes();
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Manage L2TP Users</title>
+    <title>Manage SSTP Users</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
@@ -957,7 +956,7 @@ $allRoutes = getPeerRoutes();
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">L2TP User Manager</a>
+        <a class="navbar-brand" href="#">SSTP User Manager</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -978,12 +977,12 @@ $allRoutes = getPeerRoutes();
 </nav>
 <div class="container mt-5">
 
-    <h2 class="mb-4 text-center">Manage L2TP Users</h2>
-    
-    <!-- L2TP Service Status -->
+    <h2 class="mb-4 text-center">Manage SSTP Users</h2>
+
+    <!-- SSTP Service Status -->
     <div class="card mb-4">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <span><strong>🔌 L2TP Service Status</strong></span>
+            <span><strong>🔌 SSTP Service Status</strong></span>
             <div>
                 <button class="btn btn-sm btn-success" onclick="controlService('start')">▶️ Start</button>
                 <button class="btn btn-sm btn-warning" onclick="controlService('restart')">🔄 Restart</button>
@@ -1000,7 +999,7 @@ $allRoutes = getPeerRoutes();
                     <strong>Connected Tunnels:</strong> <span id="tunnelCount">-</span>
                 </div>
                 <div class="col-md-4">
-                    <strong>Service:</strong> xl2tpd
+                    <strong>Service:</strong> sstpd
                 </div>
             </div>
         </div>
@@ -1227,7 +1226,7 @@ $allRoutes = getPeerRoutes();
                             </div>
                             <div class="mb-3">
                                 <label for="routeGateway" class="form-label">Gateway (optional, defaults to Peer IP)</label>
-                                <input type="text" class="form-control" id="routeGateway" name="gateway" placeholder="e.g., 10.255.10.1">
+                                <input type="text" class="form-control" id="routeGateway" name="gateway" placeholder="e.g., 10.200.10.1">
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Add Route</button>
                         </form>
@@ -2088,7 +2087,7 @@ $allRoutes = getPeerRoutes();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'l2tp-users-' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.download = 'sstp-users-' + new Date().toISOString().slice(0, 10) + '.csv';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -2157,7 +2156,7 @@ function refreshServiceStatus() {
 }
 
 function controlService(action) {
-    if (!confirm('Are you sure you want to ' + action + ' the L2TP service?')) {
+    if (!confirm('Are you sure you want to ' + action + ' the SSTP service?')) {
         return;
     }
     

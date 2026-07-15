@@ -1,6 +1,6 @@
 <?php
 /**
- * Security utility functions for L2TP Manager
+ * Security utility functions for SSTP Manager
  * Provides input validation, CSRF protection, and security utilities
  */
 
@@ -132,7 +132,7 @@ function validateUsername($username) {
         return false;
     }
     
-    // Allow alphanumeric, underscore, hyphen, dot, and @ (common in L2TP/PPP usernames)
+    // Allow alphanumeric, underscore, hyphen, dot, and @ (common in SSTP/PPP usernames)
     // Reject dangerous characters: spaces, quotes, backticks, semicolons, pipes, etc.
     if (preg_match('/[\s\'"`;\|\\\\$()<>{}]/', $username)) {
         return false;
@@ -156,7 +156,7 @@ function validatePassword($password) {
         return false;
     }
     
-    // Length check (minimum 1, maximum 128 characters) - L2TP passwords can be short
+    // Length check (minimum 1, maximum 128 characters) - SSTP passwords can be short
     if (strlen($password) < 1 || strlen($password) > 128) {
         return false;
     }
@@ -438,7 +438,7 @@ function validateFilePath($path, $baseDir) {
  */
 function safeErrorMessage($message) {
     // Log the full error server-side
-    error_log("L2TP Manager Error: " . $message);
+    error_log("SSTP Manager Error: " . $message);
     
     // Return generic message to user
     return "An error occurred. Please try again.";
@@ -462,7 +462,7 @@ function validateGateway($gateway) {
  * @param array $details Additional details about the action
  */
 function auditLog($action, $details = []) {
-    $logFile = '/var/log/l2tp-manager-audit.log';
+    $logFile = '/var/log/sstp-manager-audit.log';
     $timestamp = date('Y-m-d H:i:s');
     $clientIP = getClientIP();
     $username = $_SESSION['admin_user'] ?? 'unknown';

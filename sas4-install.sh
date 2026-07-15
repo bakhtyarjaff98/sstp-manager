@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==============================================================================
-# 🚀 SAS4 L2TP Manager - Web Interface Installer
+# 🚀 SAS4 SSTP Manager - Web Interface Installer
 # ==============================================================================
 
 # Color definitions
@@ -32,18 +32,18 @@ echo "                                                    "
 echo "                    By Abanoub                   "
 echo ""
 # Variables
-REPO_URL="https://github.com/h4775346/l2tp-manager.git"
-TARGET_DIR="/opt/sas4/site/l2tp-manager/"
+REPO_URL="https://github.com/bakhtyarjaff98/sstp-manager.git"
+TARGET_DIR="/opt/sas4/site/sstp-manager/"
 CHAP_SECRETS="/etc/ppp/chap-secrets"
 PORTS_CONF="/etc/apache2/ports.conf"
-CERT_PATH="/etc/ssl/certs/l2tp-manager.pem"
-KEY_PATH="/etc/ssl/private/l2tp-manager.key"
+CERT_PATH="/etc/ssl/certs/sstp-manager.pem"
+KEY_PATH="/etc/ssl/private/sstp-manager.key"
 HTTP_PORT=8090
 HTTPS_PORT=8099
-HTTP_CONF="/etc/apache2/sites-available/l2tp-manager-http.conf"
-SSL_CONF="/etc/apache2/sites-available/l2tp-manager-ssl.conf"
+HTTP_CONF="/etc/apache2/sites-available/sstp-manager-http.conf"
+SSL_CONF="/etc/apache2/sites-available/sstp-manager-ssl.conf"
 
-echo -e "${YELLOW}🚀 Starting L2TP Manager Web Interface Installation...${NC}"
+echo -e "${YELLOW}🚀 Starting SSTP Manager Web Interface Installation...${NC}"
 echo ""
 
 # Install Apache & dependencies
@@ -56,7 +56,7 @@ echo -e "${GREEN}✅ Required packages installed${NC}"
 echo ""
 
 # Clone the project
-echo -e "${CYAN}📥 Cloning L2TP Manager repository...${NC}"
+echo -e "${CYAN}📥 Cloning SSTP Manager repository...${NC}"
 if [ -d "$TARGET_DIR" ]; then
     echo -e "${YELLOW}Removing existing directory $TARGET_DIR${NC}"
     rm -rf "$TARGET_DIR"
@@ -110,29 +110,29 @@ else
 fi
 echo ""
 
-# HTTP VirtualHost (for /l2tp-manager only)
+# HTTP VirtualHost (for /sstp-manager only)
 echo -e "${CYAN}⚙️  Configuring HTTP VirtualHost...${NC}"
 if [ ! -f "$HTTP_CONF" ]; then
 cat <<EOL > "$HTTP_CONF"
 <VirtualHost *:$HTTP_PORT>
-    Alias /l2tp-manager $TARGET_DIR
+    Alias /sstp-manager $TARGET_DIR
     <Directory $TARGET_DIR>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
-    ErrorLog \${APACHE_LOG_DIR}/l2tp-http-error.log
-    CustomLog \${APACHE_LOG_DIR}/l2tp-http-access.log combined
+    ErrorLog \${APACHE_LOG_DIR}/sstp-http-error.log
+    CustomLog \${APACHE_LOG_DIR}/sstp-http-access.log combined
 </VirtualHost>
 EOL
-    a2ensite l2tp-manager-http.conf
+    a2ensite sstp-manager-http.conf
     echo -e "${GREEN}✅ HTTP VirtualHost created and enabled${NC}"
 else
     echo -e "${GREEN}✅ HTTP VirtualHost already configured${NC}"
 fi
 echo ""
 
-# HTTPS VirtualHost (for /l2tp-manager only)
+# HTTPS VirtualHost (for /sstp-manager only)
 echo -e "${CYAN}⚙️  Configuring HTTPS VirtualHost...${NC}"
 if [ ! -f "$SSL_CONF" ]; then
 cat <<EOL > "$SSL_CONF"
@@ -141,18 +141,18 @@ cat <<EOL > "$SSL_CONF"
     SSLCertificateFile $CERT_PATH
     SSLCertificateKeyFile $KEY_PATH
 
-    Alias /l2tp-manager $TARGET_DIR
+    Alias /sstp-manager $TARGET_DIR
     <Directory $TARGET_DIR>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
 
-    ErrorLog \${APACHE_LOG_DIR}/l2tp-ssl-error.log
-    CustomLog \${APACHE_LOG_DIR}/l2tp-ssl-access.log combined
+    ErrorLog \${APACHE_LOG_DIR}/sstp-ssl-error.log
+    CustomLog \${APACHE_LOG_DIR}/sstp-ssl-access.log combined
 </VirtualHost>
 EOL
-    a2ensite l2tp-manager-ssl.conf
+    a2ensite sstp-manager-ssl.conf
     echo -e "${GREEN}✅ HTTPS VirtualHost created and enabled${NC}"
 else
     echo -e "${GREEN}✅ HTTPS VirtualHost already configured${NC}"
@@ -168,9 +168,9 @@ echo -e "${GREEN}==============================================${NC}"
 echo -e "${GREEN}   Installation Complete! 🎉${NC}"
 echo -e "${GREEN}==============================================${NC}"
 echo ""
-echo -e "${BLUE}🌐 Access your L2TP Manager:${NC}"
-echo -e "  🔓 HTTP : http://your-ip:$HTTP_PORT/l2tp-manager/"
-echo -e "  🔐 HTTPS: https://your-ip:$HTTPS_PORT/l2tp-manager/"
+echo -e "${BLUE}🌐 Access your SSTP Manager:${NC}"
+echo -e "  🔓 HTTP : http://your-ip:$HTTP_PORT/sstp-manager/"
+echo -e "  🔐 HTTPS: https://your-ip:$HTTPS_PORT/sstp-manager/"
 echo ""
 echo -e "${YELLOW}📝 Default Credentials:${NC}"
 echo -e "  👤 Username: admin"

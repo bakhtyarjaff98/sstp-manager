@@ -1,20 +1,20 @@
-# Create or update the l2tp-routectl CLI tool
-TARGET_CLI="/usr/local/sbin/l2tp-routectl"
+# Create or update the sstp-routectl CLI tool
+TARGET_CLI="/usr/local/sbin/sstp-routectl"
 
 if [ -f "$TARGET_CLI" ]; then
-    echo -e "${YELLOW}l2tp-routectl already exists at $TARGET_CLI${NC}"
-    echo -e "${YELLOW}Updating existing l2tp-routectl CLI tool...${NC}"
+    echo -e "${YELLOW}sstp-routectl already exists at $TARGET_CLI${NC}"
+    echo -e "${YELLOW}Updating existing sstp-routectl CLI tool...${NC}"
 else
-    echo -e "${YELLOW}Creating l2tp-routectl CLI tool...${NC}"
+    echo -e "${YELLOW}Creating sstp-routectl CLI tool...${NC}"
 fi
 
 sudo tee "$TARGET_CLI" > /dev/null << 'EOF'
 #!/bin/bash
 
-# l2tp-routectl - CLI tool for managing per-user routes
-# Usage: l2tp-routectl [command] [options]
+# sstp-routectl - CLI tool for managing per-user routes
+# Usage: sstp-routectl [command] [options]
 
-ROUTES_DIR="/etc/l2tp-manager/routes.d"
+ROUTES_DIR="/etc/sstp-manager/routes.d"
 ROUTES_FILE_EXT=".routes"
 
 # Function to display usage
@@ -28,12 +28,12 @@ usage() {
     echo "  apply [--peer <peer_ip>]"
     echo ""
     echo "Examples:"
-    echo "  $0 add --peer 10.255.10.11 --dst 10.255.10.0/24"
-    echo "  $0 add --peer 10.255.10.11 --dst 192.168.1.0/24 --gw 10.255.10.1"
-    echo "  $0 del --peer 10.255.10.11 --dst 10.255.10.0/24"
+    echo "  $0 add --peer 10.200.10.11 --dst 10.200.10.0/24"
+    echo "  $0 add --peer 10.200.10.11 --dst 192.168.1.0/24 --gw 10.200.10.1"
+    echo "  $0 del --peer 10.200.10.11 --dst 10.200.10.0/24"
     echo "  $0 list"
-    echo "  $0 list --peer 10.255.10.11"
-    echo "  $0 apply --peer 10.255.10.11"
+    echo "  $0 list --peer 10.200.10.11"
+    echo "  $0 apply --peer 10.200.10.11"
     exit 1
 }
 

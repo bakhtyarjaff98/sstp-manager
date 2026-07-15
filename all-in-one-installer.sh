@@ -31,7 +31,7 @@ run_remote() {
 }
 
 echo -e "${BLUE}============================================${NC}"
-echo -e "${BLUE}   L2TP Manager - All-in-One Installer${NC}"
+echo -e "${BLUE}   SSTP Manager - All-in-One Installer${NC}"
 echo -e "${BLUE}============================================${NC}"
 echo ""
 echo -e "${BLUE}                    By Abanoub              ${NC}"
@@ -46,23 +46,18 @@ fi
 
 echo -e "${YELLOW}Starting all-in-one installation...${NC}"
 
-# Install the L2TP server. NOTE: sas4-l2tp-full-installer.sh already installs the
+# Install the SSTP server. NOTE: sas4-sstp-full-installer.sh already installs the
 # web management interface at its end, so we don't call sas4-install.sh again here.
-echo -e "${YELLOW}Installing L2TP server + web interface...${NC}"
-run_remote https://raw.githubusercontent.com/h4775346/l2tp-manager/master/sas4-l2tp-full-installer.sh
+echo -e "${YELLOW}Installing SSTP server + web interface...${NC}"
+run_remote https://raw.githubusercontent.com/bakhtyarjaff98/sstp-manager/master/sas4-sstp-full-installer.sh
 
 # Install the per-user routing system
 echo -e "${YELLOW}Installing per-user routing system...${NC}"
-run_remote https://raw.githubusercontent.com/h4775346/l2tp-manager/master/install-l2tp-per-user-routing.sh
+run_remote https://raw.githubusercontent.com/bakhtyarjaff98/sstp-manager/master/install-sstp-per-user-routing.sh
 
-# Restart services to apply all changes (handle both strongswan unit names)
+# Restart services to apply all changes
 echo -e "${YELLOW}Restarting services...${NC}"
-if systemctl list-unit-files | grep -q '^strongswan-starter\.service'; then
-    systemctl restart strongswan-starter
-else
-    systemctl restart strongswan
-fi
-systemctl restart xl2tpd
+systemctl restart sstpd
 systemctl reload apache2 2>/dev/null || true
 
 echo ""
@@ -85,12 +80,12 @@ if [ -z "$SERVER_IP" ]; then
     SERVER_IP="your-server-ip"
 fi
 
-echo -e "${BLUE}Access your L2TP Manager:${NC}"
-echo -e "  HTTP : http://${SERVER_IP}:8090/l2tp-manager/"
-echo -e "  HTTPS: https://${SERVER_IP}:8099/l2tp-manager/"
+echo -e "${BLUE}Access your SSTP Manager:${NC}"
+echo -e "  HTTP : http://${SERVER_IP}:8090/sstp-manager/"
+echo -e "  HTTPS: https://${SERVER_IP}:8099/sstp-manager/"
 echo ""
 echo -e "${YELLOW}Default Credentials:${NC}"
 echo -e "  Username: admin"
 echo -e "  Password: change@me (Please change this immediately)"
 echo ""
-echo -e "${GREEN}Enjoy your L2TP Manager with per-user routing!${NC}"
+echo -e "${GREEN}Enjoy your SSTP Manager with per-user routing!${NC}"
